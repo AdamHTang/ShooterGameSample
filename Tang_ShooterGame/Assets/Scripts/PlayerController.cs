@@ -3,7 +3,7 @@
  *  Date Created: Sept 13, 2021
  *  
  *  Last Edited by:
- *  Last Updated: Sept 15, 2021
+ *  Last Updated: Sept 22, 2021
  *  
  *  Description: Player control movements
  */
@@ -17,15 +17,18 @@ public class PlayerController : MonoBehaviour
     public bool mouseLook = true;           // Are we looking at the mouse.
     public string horzAxis = "Horizontal";
     public string vertAxis = "Vertical";
-    public string fireAxis = "Fire1";
     public float maxSpeed = 5f;             // Speed of the character.
+    private Rigidbody ThisBody = null;
 
-    private Rigidbody playerRB = null;
+    public string FireAxis = "Fire1";
+    public float ReloadDelay = 0.3f;
+    public bool CanFire = true;
+    public Transform[] TurretTransforms;
 
     /* Awake - Call before game start*/
     private void Awake()
     {
-        playerRB = GetComponent<Rigidbody>();   // Sets the object's rigidbody to a variable called playerRB.
+        ThisBody = GetComponent<Rigidbody>();        // Sets the object's rigidbody to a variable called playerRB.
     }   // End Awake()
 
     private void FixedUpdate()
@@ -34,10 +37,10 @@ public class PlayerController : MonoBehaviour
         float vert = Input.GetAxis(vertAxis);
         Vector3 moveDirection = new Vector3(horz, 0.0f, vert);
 
-        playerRB.AddForce(moveDirection.normalized * maxSpeed);            // normalized keeps the magnitude at 1 (unit vector).
-        playerRB.velocity = new Vector3(Mathf.Clamp(playerRB.velocity.x, -maxSpeed, maxSpeed),
-                                        Mathf.Clamp(playerRB.velocity.y, -maxSpeed, maxSpeed),
-                                        Mathf.Clamp(playerRB.velocity.z, -maxSpeed, maxSpeed));
+        ThisBody.AddForce(moveDirection.normalized * maxSpeed);            // normalized keeps the magnitude at 1 (unit vector).
+        ThisBody.velocity = new Vector3(Mathf.Clamp(ThisBody.velocity.x, -maxSpeed, maxSpeed),
+                                        Mathf.Clamp(ThisBody.velocity.y, -maxSpeed, maxSpeed),
+                                        Mathf.Clamp(ThisBody.velocity.z, -maxSpeed, maxSpeed));
 
         if (mouseLook)
         {
@@ -50,5 +53,19 @@ public class PlayerController : MonoBehaviour
             transform.localRotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
 
         }
-    }   // End FixedUpdate()
+
+        if (Input.GetButtonDown(FireAxis) && CanFire)
+        {
+            foreach (Transform T in TurretTransforms)
+            {
+                AmmoManager.SpawnAmmo(T.position, T.rotation);
+            }
+            CanFire = false;
+            Invoke("EnableFire", ReloadDelay);
+        }
+    }
+    void EnableFire()
+    {
+        CanFire = true;
+    }
 }
